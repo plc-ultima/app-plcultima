@@ -14,7 +14,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *****************************************************************************/
-
+#if 0
 #pragma GCC diagnostic ignored "-Wformat-invalid-specifier"  // snprintf
 #pragma GCC diagnostic ignored "-Wformat-extra-args"         // snprintf
 
@@ -39,7 +39,7 @@
 #define MAX_ADDRESS_LENGTH       35
 
 // up to 5 chars for ticker, 1 space, up to 20 digits (20 = digits of 2^64), + 1 decimal separator
-#define MAX_AMOUNT_LENGTH (5 + 1 + 20 + 1)
+#define MAX_AMOUNT_LENGTH        (5 + 1 + 20 + 1)
 
 // These globals are a workaround for a limitation of the UX library that
 // does not allow to pass proper callbacks and context.
@@ -769,3 +769,4 @@ void ui_validate_transaction(dispatcher_context_t *context,
 
     ux_flow_init(0, ux_accept_transaction_flow, NULL);
 }
+#endif

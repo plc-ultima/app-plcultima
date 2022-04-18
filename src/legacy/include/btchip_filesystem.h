@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,44 +24,30 @@
 #include "btchip_context.h"
 #include "btchip_filesystem_tx.h"
 
-enum btchip_supported_modes_e {
+enum btchip_supported_modes_e
+{
     BTCHIP_SUPPORTED_MODE_WALLET = 0x01,
     BTCHIP_SUPPORTED_MODE_RELAXED_WALLET = 0x02,
     BTCHIP_SUPPORTED_MODE_SERVER = 0x04,
     BTCHIP_SUPPORTED_MODE_DEVELOPER = 0x08
 };
 
-enum btchip_family_e {
-    BTCHIP_FAMILY_BITCOIN = 0x01,
-    BTCHIP_FAMILY_PEERCOIN = 0x02,
-    BTCHIP_FAMILY_QTUM = 0x03,
-    BTCHIP_FAMILY_STEALTH = 0x04
-};
-
-struct btchip_config_s {
+struct btchip_config_s
+{
     secu8 supportedModes;
     secu8 operationMode;
     unsigned char options;
-    // unsigned short payToAddressVersion;
-    // unsigned short payToScriptHashVersion;
-    // unsigned char coinFamily;
-    // /** Current Coin ID */
-    // unsigned char coinId[MAX_COIN_ID];
-    // /** Current short Coin ID */
-    // unsigned char shortCoinId[MAX_SHORT_COIN_ID];
-    // /** Current Coin ID length */
-    // unsigned char coinIdLength;
-    // /** Current short Coin ID length */
-    // unsigned char shortCoinIdLength;
 };
 typedef struct btchip_config_s btchip_config_t;
 
-typedef struct btchip_backup_area_s {
+typedef struct btchip_backup_area_s
+{
     btchip_config_t config;
     uint8_t trustedinput_key[32];
 } btchip_backup_area_t;
 
-typedef struct btchip_storage_s {
+typedef struct btchip_storage_s
+{
     unsigned char storageInitialized;
 
     unsigned char config_valid;

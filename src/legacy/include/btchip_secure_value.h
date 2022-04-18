@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,8 +43,8 @@ void ssCheck(secu16 source);
 
 #define SSEC_DEF(x) unsigned char x = 0;
 #define SSEC_INC(x) x++;
-#define SSEC_CHECK(x, value)                                                   \
-    if (x != value)                                                            \
+#define SSEC_CHECK(x, value) \
+    if (x != value)          \
         reset();
 
 #endif

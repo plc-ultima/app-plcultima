@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,12 +27,6 @@ extern unsigned char const BASE58TABLE[128];
 extern unsigned char const BASE58ALPHABET[58];
 
 extern unsigned char const SIGNMAGIC[SIGNMAGIC_LENGTH];
-
-extern unsigned char const OVERWINTER_PARAM_PREVOUTS[16];
-extern unsigned char const OVERWINTER_PARAM_SEQUENCE[16];
-extern unsigned char const OVERWINTER_PARAM_OUTPUTS[16];
-extern unsigned char const OVERWINTER_PARAM_SIGHASH[16];
-extern unsigned char const OVERWINTER_NO_JOINSPLITS[32];
 
 #define HDKEY_VERSION_LENGTH 4
 

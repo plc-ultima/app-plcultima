@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@
 
 unsigned char const HEXDIGITS[] = {'0', '1', '2', '3', '4', '5', '6', '7',
                                    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-
+// clang-format off
 unsigned char const BASE58TABLE[] = {
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -33,7 +33,7 @@ unsigned char const BASE58TABLE[] = {
     0xff, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b,
     0xff, 0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36,
     0x37, 0x38, 0x39, 0xff, 0xff, 0xff, 0xff, 0xff};
-
+// clang-format on
 unsigned char const BASE58ALPHABET[] = {
     '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
     'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',
@@ -45,12 +45,6 @@ unsigned char const SIGNMAGIC[] = {' ', 'S', 'i', 'g', 'n', 'e', 'd', ' ', 'M',
 
 unsigned char const TWOPOWER[] = {0x01, 0x02, 0x04, 0x08,
                                   0x10, 0x20, 0x40, 0x80};
-
-unsigned char const OVERWINTER_PARAM_PREVOUTS[16] = { 'Z', 'c', 'a', 's', 'h', 'P', 'r', 'e', 'v', 'o', 'u', 't', 'H', 'a', 's', 'h' };
-unsigned char const OVERWINTER_PARAM_SEQUENCE[16] = { 'Z', 'c', 'a', 's', 'h', 'S', 'e', 'q', 'u', 'e', 'n', 'c', 'H', 'a', 's', 'h' };
-unsigned char const OVERWINTER_PARAM_OUTPUTS[16] = { 'Z', 'c', 'a', 's', 'h', 'O', 'u', 't', 'p', 'u', 't', 's', 'H', 'a', 's', 'h' };
-unsigned char const OVERWINTER_PARAM_SIGHASH[16] = { 'Z', 'c', 'a', 's', 'h', 'S', 'i', 'g', 'H', 'a', 's', 'h', 0, 0, 0, 0 };
-unsigned char const OVERWINTER_NO_JOINSPLITS[32] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 unsigned char const DISPATCHER_CLA[] = {
     BTCHIP_CLA, // btchip_apdu_setup,
@@ -81,7 +75,7 @@ unsigned char const DISPATCHER_INS[] = {
     BTCHIP_INS_SIGN_MESSAGE,             // btchip_apdu_sign_message,
     BTCHIP_INS_GET_RANDOM,               // btchip_apdu_get_random,
     BTCHIP_INS_GET_FIRMWARE_VERSION,     // btchip_apdu_get_firmware_version,
-    BTCHIP_INS_GET_COIN_VER,           // btchip_apdu_get_coin_version
+    BTCHIP_INS_GET_COIN_VER,             // btchip_apdu_get_coin_version
 };
 
 unsigned char const DISPATCHER_DATA_IN[] = {

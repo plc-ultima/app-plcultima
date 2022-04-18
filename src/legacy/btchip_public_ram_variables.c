@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,10 @@
 *  limitations under the License.
 ********************************************************************************/
 
-#include "btchip_public_ram_variables.h"
+#include "btchip_config.h"
+
+#include "btchip_secure_value.h"
+#include "btchip_context.h"
 
 extern btchip_context_t btchip_context_D;
 

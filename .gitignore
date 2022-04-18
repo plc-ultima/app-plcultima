@@ -11,8 +11,8 @@ unit-tests/build/
 unit-tests/coverage/
 unit-tests/coverage.info
 
-tests-legacy/plcultima-bin
-tests-legacy/plcultima-testnet-bin
+tests/plcultima-bin
+tests/plcultima-testnet-bin
 
 # Fuzzing
 fuzzing/build/

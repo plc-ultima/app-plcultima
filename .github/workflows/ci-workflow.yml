@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [workflow_dispatch, push, pull_request]
 
 jobs:
   job_build:
@@ -60,15 +60,15 @@ jobs:
           name: code-coverage
           path: unit-tests/coverage
 
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./unit-tests/coverage.info
-          flags: unittests
-          name: codecov-app-plcultima
-          fail_ci_if_error: true
-          verbose: true
+      # - name: Upload to codecov.io
+      #   uses: codecov/codecov-action@v1
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     file: ./unit-tests/coverage.info
+      #     flags: unittests
+      #     name: codecov-app-plcultima
+      #     fail_ci_if_error: false
+      #     verbose: true
 
       - name: HTML documentation
         run: doxygen .doxygen/Doxyfile
@@ -79,37 +79,7 @@ jobs:
           path: doc/html
 
   job_test:
-    name: Tests
-    needs: job_build
-    runs-on: ubuntu-latest
-
-    container:
-      image: ghcr.io/ledgerhq/speculos:latest
-      ports:
-        - 1234:1234
-        - 9999:9999
-        - 40000:40000
-        - 41000:41000
-        - 42000:42000
-        - 43000:43000
-      options: --entrypoint /bin/bash
-
-    steps:
-      - name: Clone
-        uses: actions/checkout@v2
-
-      - name: Download PLC Ultima Testnet app binary
-        uses: actions/download-artifact@v2
-        with:
-          name: plcultima-testnet-app
-          path: bin
-
-      - name: Run tests
-        run: |
-          cd tests && pip install -r requirements.txt && PYTHONPATH=$PYTHONPATH:/speculos pytest
-
-  job_test_mainnet:
-    name: Tests on mainnet
+    name: Functional tests
     needs: job_build
     runs-on: ubuntu-latest
 
@@ -132,74 +102,14 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: plcultima-app
-          path: bin
-
-      - name: Run tests
-        run: |
-          cd tests_mainnet && pip install -r requirements.txt && PYTHONPATH=$PYTHONPATH:/speculos pytest
-
-  job_test_legacy_native:
-    name: Legacy tests
-    needs: job_build
-    runs-on: ubuntu-latest
-
-    container:
-      image: ghcr.io/ledgerhq/speculos:latest
-      ports:
-        - 1234:1234
-        - 9999:9999
-        - 40000:40000
-        - 41000:41000
-        - 42000:42000
-        - 43000:43000
-      options: --entrypoint /bin/bash
-
-    steps:
-      - name: Clone
-        uses: actions/checkout@v2
+          path: tests/plcultima-bin
 
       - name: Download PLC Ultima Testnet app binary
         uses: actions/download-artifact@v2
         with:
           name: plcultima-testnet-app
-          path: tests-legacy/plcultima-testnet-bin
+          path: tests/plcultima-testnet-bin
 
       - name: Run tests
         run: |
-          cd tests-legacy && pip install -r requirements.txt && PATH=$PATH:/speculos pytest
-
-  job_test_legacy_lib:
-    name: Legacy tests (library)
-    needs: job_build
-    runs-on: ubuntu-latest
-
-    container:
-      image: ghcr.io/ledgerhq/speculos:latest
-      ports:
-        - 1234:1234
-        - 9999:9999
-        - 40000:40000
-        - 41000:41000
-        - 42000:42000
-        - 43000:43000
-      options: --entrypoint /bin/bash
-
-    steps:
-      - name: Clone
-        uses: actions/checkout@v2
-
-      - name: Download PLC Ultima app binary
-        uses: actions/download-artifact@v2
-        with:
-          name: plcultima-app
-          path: tests-legacy/plcultima-bin
-
-      - name: Download PLC Ultima Testnet app binary (library version)
-        uses: actions/download-artifact@v2
-        with:
-          name: plcultima-testnet-lib-app
-          path: tests-legacy/plcultima-testnet-bin
-
-      - name: Run tests
-        run: |
-          cd tests-legacy && pip install -r requirements.txt && PATH=$PATH:/speculos pytest
+          cd tests && pip install -r requirements.txt && PATH=$PATH:/speculos pytest

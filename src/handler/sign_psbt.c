@@ -674,8 +674,7 @@ static void check_input_owned(dispatcher_context_t *dc) {
 
         if (state->is_wallet_canonical) {
             // check if path is as expected
-            uint32_t coin_types[2] = {G_coin_config->bip44_coin_type,
-                                      G_coin_config->bip44_coin_type2};
+            uint32_t coin_types[1] = {G_coin_config->bip44_coin_type};
             if (!is_address_path_standard(bip32_path,
                                           bip32_path_len,
                                           state->bip44_purpose,
@@ -987,8 +986,7 @@ static void check_output_owned(dispatcher_context_t *dc) {
 
         if (state->is_wallet_canonical) {
             // for canonical wallets, the path must be exactly as expected for a change output
-            uint32_t coin_types[2] = {G_coin_config->bip44_coin_type,
-                                      G_coin_config->bip44_coin_type2};
+            uint32_t coin_types[1] = {G_coin_config->bip44_coin_type};
             if (!is_address_path_standard(bip32_path,
                                           bip32_path_len,
                                           state->bip44_purpose,

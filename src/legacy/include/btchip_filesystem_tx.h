@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,8 @@
 #define MAX_BIP44_ACCOUNT_RECOMMENDED 100
 #define MAX_BIP44_ADDRESS_INDEX_RECOMMENDED 50000
 
-struct btchip_transaction_summary_s {
+struct btchip_transaction_summary_s
+{
     unsigned char active;
     unsigned int payToAddressVersion;
     unsigned int payToScriptHashVersion;
