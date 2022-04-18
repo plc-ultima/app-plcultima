@@ -79,7 +79,7 @@ jobs:
           path: doc/html
 
   job_test:
-    name: Legacy tests
+    name: Functional tests
     needs: job_build
     runs-on: ubuntu-latest
 

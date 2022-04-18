@@ -127,7 +127,7 @@ static bool is_lowercase_hex(char c) {
 }
 
 static uint8_t lowercase_hex_to_int(char c) {
-    return (uint8_t)(is_digit(c) ? c - '0' : c - 'a' + 10);
+    return (uint8_t) (is_digit(c) ? c - '0' : c - 'a' + 10);
 }
 
 /**

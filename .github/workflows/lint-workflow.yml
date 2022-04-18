@@ -1,6 +1,6 @@
 name: Code style check
 
-on: [push, pull_request]
+on: [workflow_dispatch, push, pull_request]
 
 jobs:
   job_lint:
@@ -14,6 +14,6 @@ jobs:
       - name: Lint
         uses: DoozyX/clang-format-lint-action@v0.12
         with:
-          source: './src'
-          extensions: 'h,c'
+          source: "./src"
+          extensions: "h,c"
           clangFormatVersion: 12
