@@ -127,7 +127,7 @@ static bool is_lowercase_hex(char c) {
 }
 
 static uint8_t lowercase_hex_to_int(char c) {
-    return (uint8_t) (is_digit(c) ? c - '0' : c - 'a' + 10);
+    return (uint8_t)(is_digit(c) ? c - '0' : c - 'a' + 10);
 }
 
 /**
@@ -536,36 +536,6 @@ int get_script_address(const uint8_t script[],
             addr_len =
                 base58_encode_address(script + 2, coin_config->p2sh_version, out, out_len - 1);
             break;
-        case SCRIPT_TYPE_P2WPKH:
-        case SCRIPT_TYPE_P2WSH:
-        case SCRIPT_TYPE_P2TR: {
-            // bech32/bech32m encoding
-
-            // 20 for P2WPKH, 32 for P2WSH or P2TR
-            int hash_length = (script_type == SCRIPT_TYPE_P2WPKH ? 20 : 32);
-
-            // witness program version
-            int version = (script_type == SCRIPT_TYPE_P2TR ? 1 : 0);
-
-            // make sure that the output buffer is long enough
-            if (out_len < 73 + strlen(coin_config->native_segwit_prefix)) {
-                return -1;
-            }
-
-            int ret = segwit_addr_encode(out,
-                                         coin_config->native_segwit_prefix,
-                                         version,
-                                         script + 2,
-                                         hash_length  // 20 for WPKH, 32 for WSH
-            );
-
-            if (ret != 1) {
-                return -1;  // should never happen
-            }
-
-            addr_len = strlen(out);
-            break;
-        }
         default:
             return -1;
     }

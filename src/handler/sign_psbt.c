@@ -674,8 +674,7 @@ static void check_input_owned(dispatcher_context_t *dc) {
 
         if (state->is_wallet_canonical) {
             // check if path is as expected
-            uint32_t coin_types[2] = {G_coin_config->bip44_coin_type,
-                                      G_coin_config->bip44_coin_type2};
+            uint32_t coin_types[1] = {G_coin_config->bip44_coin_type};
             if (!is_address_path_standard(bip32_path,
                                           bip32_path_len,
                                           state->bip44_purpose,
@@ -987,8 +986,7 @@ static void check_output_owned(dispatcher_context_t *dc) {
 
         if (state->is_wallet_canonical) {
             // for canonical wallets, the path must be exactly as expected for a change output
-            uint32_t coin_types[2] = {G_coin_config->bip44_coin_type,
-                                      G_coin_config->bip44_coin_type2};
+            uint32_t coin_types[1] = {G_coin_config->bip44_coin_type};
             if (!is_address_path_standard(bip32_path,
                                           bip32_path_len,
                                           state->bip44_purpose,
@@ -1872,7 +1870,7 @@ static void sign_segwit_v1(dispatcher_context_t *dc) {
     uint8_t tmp[32];
 
     // hash type
-    uint8_t sighash_byte = (uint8_t) (state->cur_input.sighash_type & 0xFF);
+    uint8_t sighash_byte = (uint8_t)(state->cur_input.sighash_type & 0xFF);
     crypto_hash_update_u8(&sighash_context.header, sighash_byte);
 
     // nVersion
@@ -1988,7 +1986,7 @@ static void sign_sighash_ecdsa(dispatcher_context_t *dc) {
     uint8_t input_index = (uint8_t) state->cur_input_index;
     dc->add_to_response(&input_index, 1);
     dc->add_to_response(&sig, sig_len);
-    uint8_t sighash_byte = (uint8_t) (state->cur_input.sighash_type & 0xFF);
+    uint8_t sighash_byte = (uint8_t)(state->cur_input.sighash_type & 0xFF);
     dc->add_to_response(&sighash_byte, 1);
     dc->finalize_response(SW_INTERRUPTED_EXECUTION);
 
@@ -2070,7 +2068,7 @@ static void sign_sighash_schnorr(dispatcher_context_t *dc) {
     dc->add_to_response(&sig, sizeof(sig));
 
     // only append the sighash type byte if it is non-zero
-    uint8_t sighash_byte = (uint8_t) (state->cur_input.sighash_type & 0xFF);
+    uint8_t sighash_byte = (uint8_t)(state->cur_input.sighash_type & 0xFF);
     if (sighash_byte != 0x00) {
         // only add the sighash byte if not 0
         dc->add_to_response(&sighash_byte, 1);

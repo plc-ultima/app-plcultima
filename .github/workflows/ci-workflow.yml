@@ -1,0 +1,115 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  job_build:
+    name: Compilation
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          make DEBUG=0 COIN=plcultima && mv bin/ plcultima-bin/
+          make clean
+          make DEBUG=0 COIN=plcultima_testnet && mv bin/ plcultima-testnet-bin/
+      - name: Upload PLC Ultima app binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: plcultima-app
+          path: plcultima-bin
+
+      - name: Upload PLC Ultima Testnet app binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: plcultima-testnet-app
+          path: plcultima-testnet-bin
+
+  job_unit_test:
+    name: Unit test
+    needs: job_build
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v2
+
+      - name: Build unit tests
+        run: |
+          cd unit-tests/
+          cmake -Bbuild -H. && make -C build && make -C build test
+      - name: Generate code coverage
+        run: |
+          cd unit-tests/
+          lcov --directory . -b "$(realpath build/)" --capture --initial -o coverage.base && \
+          lcov --rc lcov_branch_coverage=1 --directory . -b "$(realpath build/)" --capture -o coverage.capture && \
+          lcov --directory . -b "$(realpath build/)" --add-tracefile coverage.base --add-tracefile coverage.capture -o coverage.info && \
+          lcov --directory . -b "$(realpath build/)" --remove coverage.info '*/unit-tests/*' -o coverage.info && \
+          genhtml coverage.info -o coverage
+      - uses: actions/upload-artifact@v2
+        with:
+          name: code-coverage
+          path: unit-tests/coverage
+
+      # - name: Upload to codecov.io
+      #   uses: codecov/codecov-action@v1
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     file: ./unit-tests/coverage.info
+      #     flags: unittests
+      #     name: codecov-app-plcultima
+      #     fail_ci_if_error: false
+      #     verbose: true
+
+      - name: HTML documentation
+        run: doxygen .doxygen/Doxyfile
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: documentation
+          path: doc/html
+
+  job_test:
+    name: Legacy tests
+    needs: job_build
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/ledgerhq/speculos:latest
+      ports:
+        - 1234:1234
+        - 9999:9999
+        - 40000:40000
+        - 41000:41000
+        - 42000:42000
+        - 43000:43000
+      options: --entrypoint /bin/bash
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v2
+
+      - name: Download PLC Ultima app binary
+        uses: actions/download-artifact@v2
+        with:
+          name: plcultima-app
+          path: tests/plcultima-bin
+
+      - name: Download PLC Ultima Testnet app binary
+        uses: actions/download-artifact@v2
+        with:
+          name: plcultima-testnet-app
+          path: tests/plcultima-testnet-bin
+
+      - name: Run tests
+        run: |
+          cd tests && pip install -r requirements.txt && PATH=$PATH:/speculos pytest

@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 
 #include "btchip_internal.h"
 
-void btchip_compress_public_key_value(unsigned char *value) {
+void btchip_compress_public_key_value(unsigned char *value)
+{
     value[0] = ((value[64] & 1) ? 0x03 : 0x02);
 }

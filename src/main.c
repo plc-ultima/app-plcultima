@@ -91,36 +91,36 @@ uint8_t G_app_mode;
 
 // clang-format off
 const command_descriptor_t COMMAND_DESCRIPTORS[] = {
-    {
-        .cla = CLA_APP,
-        .ins = GET_EXTENDED_PUBKEY,
-        .handler = (command_handler_t)handler_get_extended_pubkey
-    },
-    {
-        .cla = CLA_APP,
-        .ins = GET_WALLET_ADDRESS,
-        .handler = (command_handler_t)handler_get_wallet_address
-    },
-    {
-        .cla = CLA_APP,
-        .ins = REGISTER_WALLET,
-        .handler = (command_handler_t)handler_register_wallet
-    },
-    {
-        .cla = CLA_APP,
-        .ins = SIGN_PSBT,
-        .handler = (command_handler_t)handler_sign_psbt
-    },
-    {
-        .cla = CLA_APP,
-        .ins = GET_MASTER_FINGERPRINT,
-        .handler = (command_handler_t)handler_get_master_fingerprint
-    },
-    {
-        .cla = CLA_APP,
-        .ins = SIGN_MESSAGE,
-        .handler = (command_handler_t)handler_sign_message
-    },
+    // {
+    //     .cla = CLA_APP,
+    //     .ins = GET_EXTENDED_PUBKEY,
+    //     .handler = (command_handler_t)handler_get_extended_pubkey
+    // },
+    // {
+    //     .cla = CLA_APP,
+    //     .ins = GET_WALLET_ADDRESS,
+    //     .handler = (command_handler_t)handler_get_wallet_address
+    // },
+    // {
+    //     .cla = CLA_APP,
+    //     .ins = REGISTER_WALLET,
+    //     .handler = (command_handler_t)handler_register_wallet
+    // },
+    // {
+    //     .cla = CLA_APP,
+    //     .ins = SIGN_PSBT,
+    //     .handler = (command_handler_t)handler_sign_psbt
+    // },
+    // {
+    //     .cla = CLA_APP,
+    //     .ins = GET_MASTER_FINGERPRINT,
+    //     .handler = (command_handler_t)handler_get_master_fingerprint
+    // },
+    // {
+    //     .cla = CLA_APP,
+    //     .ins = SIGN_MESSAGE,
+    //     .handler = (command_handler_t)handler_sign_message
+    // },
 };
 // clang-format on
 
@@ -132,7 +132,6 @@ void init_coin_config(btchip_altcoin_config_t *coin_config) {
 
     // new app and legacy
     coin_config->bip44_coin_type = BIP44_COIN_TYPE;
-    coin_config->bip44_coin_type2 = BIP44_COIN_TYPE_2;
     coin_config->p2pkh_version = COIN_P2PKH_VERSION;
     coin_config->p2sh_version = COIN_P2SH_VERSION;
 
@@ -142,20 +141,8 @@ void init_coin_config(btchip_altcoin_config_t *coin_config) {
                    "COIN_COINID_SHORT too large");
     strcpy(coin_config->name_short, COIN_COINID_SHORT);
 
-#ifdef COIN_NATIVE_SEGWIT_PREFIX
-    _Static_assert(
-        sizeof(COIN_NATIVE_SEGWIT_PREFIX) <= sizeof(coin_config->native_segwit_prefix_val),
-        "COIN_NATIVE_SEGWIT_PREFIX too large");
-    strcpy(coin_config->native_segwit_prefix_val, COIN_NATIVE_SEGWIT_PREFIX);
-    coin_config->native_segwit_prefix = coin_config->native_segwit_prefix_val;
-#else
-    coin_config->native_segwit_prefix = 0;
-#endif  // #ifdef COIN_NATIVE_SEGWIT_PREFIX
-
 #ifndef DISABLE_LEGACY_SUPPORT
     // legacy only
-    coin_config->family = COIN_FAMILY;
-
     _Static_assert(sizeof(COIN_COINID) <= sizeof(coin_config->coinid), "COIN_COINID too large");
     strcpy(coin_config->coinid, COIN_COINID);
 
@@ -163,15 +150,6 @@ void init_coin_config(btchip_altcoin_config_t *coin_config) {
                    "COIN_COINID_NAME too large");
 
     strcpy(coin_config->name, COIN_COINID_NAME);
-#ifdef COIN_FORKID
-    coin_config->forkid = COIN_FORKID;
-#endif  // COIN_FORKID
-#ifdef COIN_CONSENSUS_BRANCH_ID
-    coin_config->zcash_consensus_branch_id = COIN_CONSENSUS_BRANCH_ID;
-#endif  // COIN_CONSENSUS_BRANCH_ID
-#ifdef COIN_FLAGS
-    coin_config->flags = COIN_FLAGS;
-#endif  // COIN_FLAGS
     coin_config->kind = COIN_KIND;
 #endif
 }
@@ -350,7 +328,7 @@ void coin_main(btchip_altcoin_config_t *coin_config) {
 __attribute__((section(".boot"))) int main(int arg0) {
     G_app_mode = APP_MODE_UNINITIALIZED;
 
-#ifdef USE_LIB_BITCOIN
+#ifdef USE_LIBCOIN
     BEGIN_TRY {
         TRY {
             unsigned int libcall_params[5];
@@ -360,10 +338,10 @@ __attribute__((section(".boot"))) int main(int arg0) {
             G_app_mode =
                 APP_MODE_LEGACY;  // in library mode, we currently only run with legacy APDUs
 
-            PRINTF("Hello from litecoin\n");
+            PRINTF("Hello from PLC Ultima\n");
             check_api_level(CX_COMPAT_APILEVEL);
             // delegate to bitcoin app/lib
-            libcall_params[0] = "Bitcoin";
+            libcall_params[0] = "PLC Ultima";
             libcall_params[1] = 0x100;
             libcall_params[2] = RUN_APPLICATION;
             libcall_params[3] = &coin_config;
@@ -421,6 +399,6 @@ __attribute__((section(".boot"))) int main(int arg0) {
             app_exit();
 #endif
     }
-#endif  // USE_LIB_BITCOIN
+#endif  // USE_LIBCOIN
     return 0;
 }

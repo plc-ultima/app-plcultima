@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,13 +20,16 @@
 
 #define MAX_LENGTH 248
 
-unsigned short btchip_apdu_get_random() {
+unsigned short btchip_apdu_get_random()
+{
     unsigned char length = G_io_apdu_buffer[ISO_OFFSET_LC];
-    if (length == 0) {
+    if (length == 0)
+    {
         length = MAX_LENGTH;
     }
 
-    if (length > MAX_LENGTH) {
+    if (length > MAX_LENGTH)
+    {
         return BTCHIP_SW_INCORRECT_LENGTH;
     }
 

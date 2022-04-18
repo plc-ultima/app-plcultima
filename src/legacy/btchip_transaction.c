@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,18 +20,6 @@
 #include "btchip_internal.h"
 #include "btchip_apdu_constants.h"
 #include "btchip_display_variables.h"
-
-#define CONSENSUS_BRANCH_ID_OVERWINTER 0x5ba81b19
-#define CONSENSUS_BRANCH_ID_SAPLING 0x76b809bb
-#define CONSENSUS_BRANCH_ID_ZCLASSIC 0x930b540d
-
-// Check if fOverwintered flag is set and if nVersion is >= 0x03
-#define TRUSTED_INPUT_OVERWINTER ( (G_coin_config->kind == COIN_KIND_ZCASH || \
-                                    G_coin_config->kind == COIN_KIND_ZCLASSIC || \
-                                    G_coin_config->kind == COIN_KIND_KOMODO) && \
-                                    (btchip_read_u32(btchip_context_D.transactionVersion, 0, 0) & (1<<31)) && \
-                                    (btchip_read_u32(btchip_context_D.transactionVersion, 0, 0) ^ (1<<31)) >= 0x03 \
-                                )
 
 #define DEBUG_LONG "%d"
 
@@ -88,13 +76,8 @@ unsigned char transaction_amount_sub_be(unsigned char *target,
 void transaction_offset(unsigned char value) {
     if ((btchip_context_D.transactionHashOption & TRANSACTION_HASH_FULL) != 0) {
         PRINTF("--- ADD TO HASH FULL:\n%.*H\n", value, btchip_context_D.transactionBufferPointer);
-        if (btchip_context_D.usingOverwinter) {
-            cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.transactionBufferPointer, value, NULL, 0);
-        }
-        else {
-            cx_hash(&btchip_context_D.transactionHashFull.sha256.header, 0,
-                btchip_context_D.transactionBufferPointer, value, NULL, 0);
-        }
+        cx_hash(&btchip_context_D.transactionHashFull.sha256.header, 0,
+            btchip_context_D.transactionBufferPointer, value, NULL, 0);
     }
     if ((btchip_context_D.transactionHashOption &
          TRANSACTION_HASH_AUTHORIZATION) != 0) {
@@ -165,121 +148,15 @@ void transaction_parse(unsigned char parseMode) {
                                       .transactionAmount));
                     // TODO : transactionControlFid
                     // Reset hashes
-                    if (btchip_context_D.usingOverwinter) {
-                        if (btchip_context_D.segwitParsedOnce) {
-                            uint8_t parameters[16];
-                            os_memmove(parameters, OVERWINTER_PARAM_SIGHASH, 16);
-                            if (G_coin_config->kind == COIN_KIND_ZCLASSIC) {
-                                btchip_write_u32_le(parameters + 12, CONSENSUS_BRANCH_ID_ZCLASSIC);
-                            }
-                            else {
-                                btchip_write_u32_le(parameters + 12,
-                                    btchip_context_D.usingOverwinter == ZCASH_USING_OVERWINTER_SAPLING ?
-                                    (G_coin_config->zcash_consensus_branch_id != 0 ? G_coin_config->zcash_consensus_branch_id : CONSENSUS_BRANCH_ID_SAPLING) : CONSENSUS_BRANCH_ID_OVERWINTER);
-                            }
-                            cx_blake2b_init2(&btchip_context_D.transactionHashFull.blake2b, 256, NULL, 0, parameters, 16);
-                        }
-                    }
-                    else {
-                        cx_sha256_init(&btchip_context_D.transactionHashFull.sha256);
-                    }
+                    cx_sha256_init(&btchip_context_D.transactionHashFull.sha256);
                     cx_sha256_init(
                         &btchip_context_D.transactionHashAuthorization);
-                    if (btchip_context_D.usingSegwit) {
-                        btchip_context_D.transactionHashOption = 0;
-                        if (!btchip_context_D.segwitParsedOnce) {
-                            if (btchip_context_D.usingOverwinter) {
-                                cx_blake2b_init2(&btchip_context_D.segwit.hash.hashPrevouts.blake2b, 256, NULL, 0, (uint8_t *)OVERWINTER_PARAM_PREVOUTS, 16);
-                                cx_blake2b_init2(&btchip_context_D.transactionHashFull.blake2b, 256, NULL, 0, (uint8_t *)OVERWINTER_PARAM_SEQUENCE, 16);
-                            }
-                            else {
-                                cx_sha256_init(
-                                    &btchip_context_D.segwit.hash.hashPrevouts.sha256);
-                            }
-                        } else {
-                            PRINTF("Resume SegWit hash\n");
-                            PRINTF("SEGWIT Version\n%.*H\n",sizeof(btchip_context_D.transactionVersion),btchip_context_D.transactionVersion);
-                            PRINTF("SEGWIT HashedPrevouts\n%.*H\n",sizeof(btchip_context_D.segwit.cache.hashedPrevouts),btchip_context_D.segwit.cache.hashedPrevouts);
-                            PRINTF("SEGWIT HashedSequence\n%.*H\n",sizeof(btchip_context_D.segwit.cache.hashedSequence),btchip_context_D.segwit.cache.hashedSequence);
-                            if (btchip_context_D.usingOverwinter) {
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.transactionVersion, sizeof(btchip_context_D.transactionVersion), NULL, 0);
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.nVersionGroupId, sizeof(btchip_context_D.nVersionGroupId), NULL, 0);
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.segwit.cache.hashedPrevouts, sizeof(btchip_context_D.segwit.cache.hashedPrevouts), NULL, 0);
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.segwit.cache.hashedSequence, sizeof(btchip_context_D.segwit.cache.hashedSequence), NULL, 0);
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.segwit.cache.hashedOutputs, sizeof(btchip_context_D.segwit.cache.hashedOutputs), NULL, 0);
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, OVERWINTER_NO_JOINSPLITS, 32, NULL, 0);
-                                if (btchip_context_D.usingOverwinter == ZCASH_USING_OVERWINTER_SAPLING) {
-                                    cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, OVERWINTER_NO_JOINSPLITS, 32, NULL, 0); // sapling hashShieldedSpends
-                                    cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, OVERWINTER_NO_JOINSPLITS, 32, NULL, 0); // sapling hashShieldedOutputs
-                                }
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.nLockTime, sizeof(btchip_context_D.nLockTime), NULL, 0);
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.nExpiryHeight, sizeof(btchip_context_D.nExpiryHeight), NULL, 0);
-                                if (btchip_context_D.usingOverwinter == ZCASH_USING_OVERWINTER_SAPLING) {
-                                    unsigned char valueBalance[8];
-                                    os_memset(valueBalance, 0, sizeof(valueBalance));
-                                    cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, valueBalance, sizeof(valueBalance), NULL, 0); // sapling valueBalance
-                                }
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.sigHashType, sizeof(btchip_context_D.sigHashType), NULL, 0);
-                            }
-                            else {
-                                PRINTF("--- ADD TO HASH FULL:\n%.*H\n", sizeof(btchip_context_D.transactionVersion), btchip_context_D.transactionVersion);
-                                cx_hash(
-                                    &btchip_context_D.transactionHashFull.sha256.header, 0,
-                                    btchip_context_D.transactionVersion,
-                                    sizeof(btchip_context_D.transactionVersion),
-                                    NULL, 0);
-                                PRINTF("--- ADD TO HASH FULL:\n%.*H\n", sizeof(btchip_context_D.segwit.cache.hashedPrevouts), btchip_context_D.segwit.cache.hashedPrevouts);
-                                cx_hash(
-                                    &btchip_context_D.transactionHashFull.sha256.header, 0,
-                                    btchip_context_D.segwit.cache.hashedPrevouts,
-                                    sizeof(btchip_context_D.segwit.cache
-                                           .hashedPrevouts),
-                                    NULL, 0);
-                                PRINTF("--- ADD TO HASH FULL:\n%.*H\n", sizeof(btchip_context_D.segwit.cache.hashedSequence), btchip_context_D.segwit.cache.hashedSequence);
-                                cx_hash(
-                                    &btchip_context_D.transactionHashFull.sha256.header, 0,
-                                    btchip_context_D.segwit.cache.hashedSequence,
-                                    sizeof(btchip_context_D.segwit.cache
-                                           .hashedSequence),
-                                    NULL, 0);
-                                PRINTF("--- ADD TO HASH AUTH:\n%.*H\n", sizeof(btchip_context_D.segwit.cache), (unsigned char *)&btchip_context_D.segwit.cache);
-                                cx_hash(&btchip_context_D
-                                         .transactionHashAuthorization.header,
-                                    0,
-                                    (unsigned char *)&btchip_context_D
-                                        .segwit.cache,
-                                    sizeof(btchip_context_D.segwit.cache),
-                                    NULL, 0);
-                            }
-                        }
-                    }
                     // Parse the beginning of the transaction
                     // Version
                     check_transaction_available(4);
                     os_memmove(btchip_context_D.transactionVersion,
                                btchip_context_D.transactionBufferPointer, 4);
                     transaction_offset_increase(4);
-
-                    if (btchip_context_D.usingOverwinter ||
-                        TRUSTED_INPUT_OVERWINTER) {
-                        // nVersionGroupId
-                        check_transaction_available(4);
-                        os_memmove(btchip_context_D.nVersionGroupId,
-                               btchip_context_D.transactionBufferPointer, 4);
-                        transaction_offset_increase(4);
-                    }
-
-                    if (G_coin_config->flags & FLAG_PEERCOIN_SUPPORT) {
-                        if (((G_coin_config->family ==
-                            BTCHIP_FAMILY_PEERCOIN &&
-                            (btchip_context_D.transactionVersion[0] < 3))) ||
-                            ((G_coin_config->family == BTCHIP_FAMILY_STEALTH) &&
-                            (btchip_context_D.transactionVersion[0] < 2))) {
-                            // Timestamp
-                            check_transaction_available(4);
-                            transaction_offset_increase(4);
-                        }
-                    }
 
                     // Number of inputs
                     btchip_context_D.transactionContext
@@ -335,25 +212,10 @@ void transaction_parse(unsigned char parseMode) {
                         check_transaction_available(2);
                         switch (*btchip_context_D.transactionBufferPointer) {
                         case 0:
-                            if (btchip_context_D.usingSegwit) {
-                                PRINTF("Non trusted input used in segwit mode\n");
-                                goto fail;
-                            }
                             trustedInputFlag = 0;
                             break;
                         case 1:
-                            if (btchip_context_D.usingSegwit) {
-                                // Segwit inputs can be passed as TrustedInput also
-                                PRINTF("Trusted input used in segwit mode\n");
-                            }
                             trustedInputFlag = 1;
-                            break;
-                        case 2:
-                            if (!btchip_context_D.usingSegwit) {
-                                PRINTF("Segwit input not used in segwit mode\n");
-                                goto fail;
-                            }
-                            trustedInputFlag = 0;
                             break;
                         default:
                             PRINTF("Invalid trusted input flag\n");
@@ -395,72 +257,9 @@ void transaction_parse(unsigned char parseMode) {
                                 PRINTF("Invalid signature\n");
                                 goto fail;
                             }
-                            // Hmac is valid. If TrustedInput contains a segwit input, update data pointer & length
-                            // to fake the parser into believing a normal segwit input was received. Do not use
-                            // transaction_offset_increase() here as it could update the hash being computed.
-                            if (btchip_context_D.usingSegwit) {
-                                // Overwrite the no longer needed HMAC's 1st byte w/ the input script length byte.
-                                *(btchip_context_D.transactionBufferPointer + 1 + TRUSTED_INPUT_SIZE + 1) =
-                                    *(btchip_context_D.transactionBufferPointer + 1 + TRUSTED_INPUT_TOTAL_SIZE + 1);
-                                // Set tx data pointer on TI header's (i.e. 0x38||0x32||0x00||Nonce (2B)) last byte
-                                // before prevout tx hash. Also remove HMAC size from remaining data length.
-                                btchip_context_D.transactionBufferPointer += 5;
-                                btchip_context_D.transactionDataRemaining -= (5+8);
-                            }
-                        }
-                        // Handle pure segwit inputs, whether trusted or not (i.e. InputHashStart 1st APDU's P2==02
-                        // & data[0]=={0x01, 0x02})
-                        if (btchip_context_D.usingSegwit) {
-                            transaction_offset_increase(1);     // Set tx pointer on 1st byte of hash
-                            check_transaction_available(
-                                36); // prevout : 32 hash + 4 index
-                            if (!btchip_context_D.segwitParsedOnce) {
-                                if (btchip_context_D.usingOverwinter) {
-                                    cx_hash(&btchip_context_D.segwit.hash.hashPrevouts.blake2b.header, 0, btchip_context_D.transactionBufferPointer, 36, NULL, 0);
-                                }
-                                else {
-                                    cx_hash(
-                                        &btchip_context_D.segwit.hash.hashPrevouts
-                                         .sha256.header,
-                                        0,
-                                        btchip_context_D.transactionBufferPointer,
-                                        36, NULL, 0);
-                                }
-                                transaction_offset_increase(36);
-                                check_transaction_available(8); // update amount
-                                btchip_swap_bytes(
-                                    amount,
-                                    btchip_context_D.transactionBufferPointer,
-                                    8);
-                                if (transaction_amount_add_be(
-                                        btchip_context_D.transactionContext
-                                            .transactionAmount,
-                                        btchip_context_D.transactionContext
-                                            .transactionAmount,
-                                        amount)) {
-                                    PRINTF("Overflow\n");
-                                    goto fail;
-                                }
-                                PRINTF("Adding amount\n%.*H\n",8,btchip_context_D.transactionBufferPointer);
-                                PRINTF("New amount\n%.*H\n",8,btchip_context_D.transactionContext.transactionAmount);
-                                transaction_offset_increase(8);
-                            } else {
-                                btchip_context_D.transactionHashOption =
-                                    TRANSACTION_HASH_FULL;
-                                transaction_offset_increase(36);
-                                btchip_context_D.transactionHashOption = 0;
-                                check_transaction_available(8); // save amount
-                                os_memmove(
-                                    btchip_context_D.inputValue,
-                                    btchip_context_D.transactionBufferPointer,
-                                    8);
-                                transaction_offset_increase(8);
-                                btchip_context_D.transactionHashOption =
-                                    TRANSACTION_HASH_FULL;
-                            }
                         }
                         // Handle non-segwit inputs (i.e. InputHashStart 1st APDU's P2==00 && data[0]==0x00)
-                        else if (!trustedInputFlag) {
+                        if (!trustedInputFlag) {
                             // Only authorized in relaxed wallet and server
                             // modes
                             SB_CHECK(N_btchip.bkp.config.operationMode);
@@ -491,7 +290,7 @@ void transaction_parse(unsigned char parseMode) {
                             */
                         }
                         // Handle non-segwit TrustedInput (i.e. InputHashStart 1st APDU's P2==00 & data[0]==0x01)
-                        else if (trustedInputFlag && !btchip_context_D.usingSegwit) {
+                        else if (trustedInputFlag) {
                             os_memmove(
                                 trustedInput,
                                 btchip_context_D.transactionBufferPointer + 2,
@@ -539,12 +338,10 @@ void transaction_parse(unsigned char parseMode) {
                             PRINTF("New amount\n%.*H\n",8,btchip_context_D.transactionContext.transactionAmount);
                         }
 
-                        if (!btchip_context_D.usingSegwit) {
-                            // Do not include the input script length + value in
-                            // the authentication hash
-                            btchip_context_D.transactionHashOption =
-                                TRANSACTION_HASH_FULL;
-                        }
+                        // Do not include the input script length + value in
+                        // the authentication hash
+                        btchip_context_D.transactionHashOption =
+                            TRANSACTION_HASH_FULL;
                     }
                     // Read the script length
                     btchip_context_D.transactionContext.scriptRemaining =
@@ -552,7 +349,7 @@ void transaction_parse(unsigned char parseMode) {
                     PRINTF("Script to read " DEBUG_LONG "\n",btchip_context_D.transactionContext.scriptRemaining);
 
                     if ((parseMode == PARSE_MODE_SIGNATURE) &&
-                        !trustedInputFlag && !btchip_context_D.usingSegwit) {
+                        !trustedInputFlag) {
                         // Only proceeds if this is not to be signed - so length
                         // should be null
                         if (btchip_context_D.transactionContext
@@ -601,44 +398,13 @@ void transaction_parse(unsigned char parseMode) {
                     if (btchip_context_D.transactionContext.scriptRemaining ==
                         0) {
                         if (parseMode == PARSE_MODE_SIGNATURE) {
-                            if (!btchip_context_D.usingSegwit) {
-                                // Restore dual hash for signature +
-                                // authentication
-                                btchip_context_D.transactionHashOption =
-                                    TRANSACTION_HASH_BOTH;
-                            } else {
-                                if (btchip_context_D.segwitParsedOnce) {
-                                    // Append the saved value
-                                    PRINTF("SEGWIT Add value\n%.*H\n",8,btchip_context_D.inputValue);
-                                    if (btchip_context_D.usingOverwinter) {
-                                        cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.inputValue, 8, NULL, 0);
-                                    }
-                                    else {
-                                        PRINTF("--- ADD TO HASH FULL:\n%.*H\n", sizeof(btchip_context_D.inputValue), btchip_context_D.inputValue);
-                                        cx_hash(&btchip_context_D
-                                                 .transactionHashFull.sha256.header,
-                                            0, btchip_context_D.inputValue, 8,
-                                            NULL, 0);
-                                    }
-                                }
-                            }
+                            // Restore dual hash for signature +
+                            // authentication
+                            btchip_context_D.transactionHashOption =
+                                TRANSACTION_HASH_BOTH;
                         }
                         // Sequence
                         check_transaction_available(4);
-                        if (btchip_context_D.usingSegwit &&
-                            !btchip_context_D.segwitParsedOnce) {
-                            if (btchip_context_D.usingOverwinter) {
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, 0, btchip_context_D.transactionBufferPointer, 4, NULL, 0);
-                            }
-                            else {
-                                PRINTF("--- ADD TO HASH FULL:\n%.*H\n", 4, btchip_context_D.transactionBufferPointer);
-                                cx_hash(&btchip_context_D.transactionHashFull
-                                         .sha256.header,
-                                    0,
-                                    btchip_context_D.transactionBufferPointer,
-                                    4, NULL, 0);
-                            }
-                        }
                         transaction_offset_increase(4);
                         // Move to next input
                         btchip_context_D.transactionContext
@@ -671,72 +437,9 @@ void transaction_parse(unsigned char parseMode) {
                     PRINTF("Input hashing done\n");
                     if (parseMode == PARSE_MODE_SIGNATURE) {
                         // inputs have been prepared, stop the parsing here
-                        if (btchip_context_D.usingSegwit &&
-                            !btchip_context_D.segwitParsedOnce) {
-                            unsigned char hashedPrevouts[32];
-                            unsigned char hashedSequence[32];
-                            // Flush the cache
-                            if (btchip_context_D.usingOverwinter) {
-                                cx_hash(&btchip_context_D.segwit.hash.hashPrevouts.blake2b.header, CX_LAST, hashedPrevouts, 0, hashedPrevouts, 32);
-                                cx_hash(&btchip_context_D.transactionHashFull.blake2b.header, CX_LAST, hashedSequence, 0, hashedSequence, 32);
-                            }
-                            else {
-                                cx_hash(&btchip_context_D.segwit.hash.hashPrevouts
-                                         .sha256.header,
-                                    CX_LAST, hashedPrevouts, 0, hashedPrevouts, 32);
-                                cx_sha256_init(
-                                    &btchip_context_D.segwit.hash.hashPrevouts.sha256);
-                                cx_hash(&btchip_context_D.segwit.hash.hashPrevouts
-                                         .sha256.header,
-                                    CX_LAST, hashedPrevouts,
-                                    sizeof(hashedPrevouts), hashedPrevouts, 32);
-                                cx_hash(&btchip_context_D.transactionHashFull
-                                         .sha256.header,
-                                    CX_LAST, hashedSequence, 0, hashedSequence, 32);
-                                cx_sha256_init(
-                                    &btchip_context_D.transactionHashFull.sha256);
-                                PRINTF("--- ADD TO HASH FULL:\n%.*H\n", sizeof(hashedSequence), hashedSequence);
-                                cx_hash(&btchip_context_D.transactionHashFull
-                                         .sha256.header,
-                                    CX_LAST, hashedSequence,
-                                    sizeof(hashedSequence), hashedSequence, 32);
-
-                            }
-                            os_memmove(
-                                btchip_context_D.segwit.cache.hashedPrevouts,
-                                hashedPrevouts, sizeof(hashedPrevouts));
-                            os_memmove(
-                                btchip_context_D.segwit.cache.hashedSequence,
-                                hashedSequence, sizeof(hashedSequence));
-                            PRINTF("hashPrevout\n%.*H\n",32,btchip_context_D.segwit.cache.hashedPrevouts);
-                            PRINTF("hashSequence\n%.*H\n",32,btchip_context_D.segwit.cache.hashedSequence);
-                        }
-                        if (btchip_context_D.usingSegwit &&
-                            btchip_context_D.segwitParsedOnce) {
-                            if (!btchip_context_D.usingOverwinter) {
-                                PRINTF("SEGWIT hashedOutputs\n%.*H\n",sizeof(btchip_context_D.segwit.cache.hashedOutputs),btchip_context_D.segwit.cache.hashedOutputs);
-                                cx_hash(
-                                    &btchip_context_D.transactionHashFull.sha256.header, 0,
-                                    btchip_context_D.segwit.cache.hashedOutputs,
-                                    sizeof(btchip_context_D.segwit.cache
-                                           .hashedOutputs),
-                                    NULL, 0);
-                            }
-                            btchip_context_D.transactionContext
-                                .transactionState =
-                                BTCHIP_TRANSACTION_SIGN_READY;
-                        } else {
-                            btchip_context_D.transactionContext
-                                .transactionState =
-                                BTCHIP_TRANSACTION_PRESIGN_READY;
-                            if (btchip_context_D.usingOverwinter) {
-                                cx_blake2b_init2(&btchip_context_D.transactionHashFull.blake2b, 256, NULL, 0, (uint8_t *)OVERWINTER_PARAM_OUTPUTS, 16);
-                            }
-                            else
-                            if (btchip_context_D.usingSegwit) {
-                                cx_sha256_init(&btchip_context_D.transactionHashFull.sha256);
-                            }
-                        }
+                        btchip_context_D.transactionContext
+                            .transactionState =
+                            BTCHIP_TRANSACTION_PRESIGN_READY;
                         continue;
                     }
                     if (btchip_context_D.transactionDataRemaining < 1) {

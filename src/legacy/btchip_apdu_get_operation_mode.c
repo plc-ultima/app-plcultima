@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,15 +21,18 @@
 #define P1_GET_OPERATION_MODE 0x00
 #define P1_GET_SECOND_FACTOR_MODE 0x01
 
-unsigned short btchip_apdu_get_operation_mode() {
+unsigned short btchip_apdu_get_operation_mode()
+{
     SB_CHECK(N_btchip.bkp.config.operationMode);
     if ((SB_GET(N_btchip.bkp.config.operationMode) ==
          BTCHIP_MODE_SETUP_NEEDED) ||
-        (SB_GET(N_btchip.bkp.config.operationMode) == BTCHIP_MODE_ISSUER)) {
+        (SB_GET(N_btchip.bkp.config.operationMode) == BTCHIP_MODE_ISSUER))
+    {
         return BTCHIP_SW_CONDITIONS_OF_USE_NOT_SATISFIED;
     }
 
-    switch (G_io_apdu_buffer[ISO_OFFSET_P1]) {
+    switch (G_io_apdu_buffer[ISO_OFFSET_P1])
+    {
     case P1_GET_OPERATION_MODE:
         G_io_apdu_buffer[0] = SB_GET(N_btchip.bkp.config.operationMode);
         break;

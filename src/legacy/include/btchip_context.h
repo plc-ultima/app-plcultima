@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,10 +31,8 @@
 #define MAGIC_TRUSTED_INPUT 0x32
 #define MAGIC_DEV_KEY 0x01
 
-#define ZCASH_USING_OVERWINTER 0x01
-#define ZCASH_USING_OVERWINTER_SAPLING 0x02
-
-enum btchip_modes_e {
+enum btchip_modes_e
+{
     BTCHIP_MODE_ISSUER = 0x00,
     BTCHIP_MODE_SETUP_NEEDED = 0xff,
     BTCHIP_MODE_WALLET = 0x01,
@@ -43,7 +41,8 @@ enum btchip_modes_e {
     BTCHIP_MODE_DEVELOPER = 0x08,
 };
 
-enum btchip_options_e {
+enum btchip_options_e
+{
     BTCHIP_OPTION_UNCOMPRESSED_KEYS = 0x01,
     BTCHIP_OPTION_DETERMINISTIC_SIGNATURE = 0x02,
     BTCHIP_OPTION_FREE_SIGHASHTYPE = 0x04,
@@ -54,7 +53,8 @@ enum btchip_options_e {
 /**
  * Current state of an untrusted transaction hashing
  */
-enum btchip_transaction_state_e {
+enum btchip_transaction_state_e
+{
     /** No transaction in progress */
     BTCHIP_TRANSACTION_NONE = 0x00,
     /** Transaction defined, waiting for an input to be hashed */
@@ -84,7 +84,8 @@ enum btchip_transaction_state_e {
 };
 typedef enum btchip_transaction_state_e btchip_transaction_state_t;
 
-enum btchip_output_parsing_state_e {
+enum btchip_output_parsing_state_e
+{
     BTCHIP_OUTPUT_PARSING_NONE = 0x00,
     BTCHIP_OUTPUT_PARSING_NUMBER_OUTPUTS = 0x01,
     BTCHIP_OUTPUT_PARSING_OUTPUT = 0x02,
@@ -93,25 +94,17 @@ enum btchip_output_parsing_state_e {
 };
 typedef enum btchip_output_parsing_state_e btchip_output_parsing_state_t;
 
-
-typedef union multi_hash {
+typedef union multi_hash
+{
     cx_sha256_t sha256;
     cx_blake2b_t blake2b;
 } multi_hash;
 
-struct segwit_hash_s {
-    union multi_hash hashPrevouts;
-};
-struct segwit_cache_s {
-    unsigned char hashedPrevouts[32];
-    unsigned char hashedSequence[32];
-    unsigned char hashedOutputs[32];
-};
-
 /**
  * Structure defining an operation on a transaction
  */
-struct btchip_transaction_context_s {
+struct btchip_transaction_context_s
+{
     /** Transient over signing components */
 
     /** Remaining number of inputs/outputs to process for this transaction */
@@ -137,7 +130,8 @@ struct btchip_transaction_context_s {
 };
 typedef struct btchip_transaction_context_s btchip_transaction_context_t;
 
-struct btchip_tmp_output_s {
+struct btchip_tmp_output_s
+{
     /** Change address if initialized */
     unsigned char changeAddress[20];
     /** Flag set if the change address was initialized */
@@ -151,7 +145,8 @@ struct btchip_tmp_output_s {
 };
 typedef struct btchip_tmp_output_s btchip_tmp_output_t;
 
-struct btchip_context_s {
+struct btchip_context_s
+{
     /** Flag if dongle has been halted */
     secu8 halted;
     /** Index of the output to convert into a trusted input in a transaction */
@@ -172,21 +167,8 @@ struct btchip_context_s {
     /** Current hash to perform (TRANSACTION_HASH_) */
     unsigned char transactionHashOption;
 
-    /* Segregated Witness changes */
-
-    union {
-        struct segwit_hash_s hash;
-        struct segwit_cache_s cache;
-    } segwit;
     unsigned char transactionVersion[4];
     unsigned char inputValue[8];
-    unsigned char usingSegwit;
-    unsigned char usingCashAddr;
-    unsigned char segwitParsedOnce;
-    /** Prevents display of segwit input warning at each InputHashStart APDU */
-    unsigned char segwitWarningSeen;
-
-    /* /Segregated Witness changes */
 
     /** Size currently available to the transaction parser */
     unsigned char transactionDataRemaining;
@@ -214,10 +196,10 @@ struct btchip_context_s {
     // was previously in NVRAM
     btchip_transaction_summary_t transactionSummary;
 
-
     unsigned short hashedMessageLength;
 
-    union {
+    union
+    {
         btchip_tmp_output_t output;
     } tmpCtx;
 
@@ -230,11 +212,6 @@ struct btchip_context_s {
     unsigned char totalOutputAmount[8];
     unsigned char changeOutputFound;
 
-    /* Overwinter */
-    unsigned char usingOverwinter;
-    unsigned char overwinterSignReady;
-    unsigned char nVersionGroupId[4];
-    unsigned char nExpiryHeight[4];
     unsigned char nLockTime[4];
     unsigned char sigHashType[4];
 
@@ -243,71 +220,24 @@ struct btchip_context_s {
 };
 typedef struct btchip_context_s btchip_context_t;
 
-
-/**
- * Structure to configure the bitcoin application for a given altcoin
- *
- */
-typedef enum btchip_coin_flags_e {
-    FLAG_PEERCOIN_UNITS=1,
-    FLAG_PEERCOIN_SUPPORT=2,
-    FLAG_SEGWIT_CHANGE_SUPPORT=4
-} btchip_coin_flags_t;
-
-
-typedef enum btchip_coin_kind_e {
-    COIN_KIND_BITCOIN_TESTNET,
-    COIN_KIND_BITCOIN,
-    COIN_KIND_BITCOIN_CASH,
-    COIN_KIND_BITCOIN_GOLD,
-    COIN_KIND_LITECOIN,
-    COIN_KIND_DOGE,
-    COIN_KIND_DASH,
-    COIN_KIND_ZCASH,
-    COIN_KIND_KOMODO,
-    COIN_KIND_RFU,
-    COIN_KIND_STRATIS,
-    COIN_KIND_PEERCOIN,
-    COIN_KIND_PIVX,
-    COIN_KIND_PLCULTIMA,
-    COIN_KIND_PLCULTIMA_TESTNET,    
-    COIN_KIND_STEALTH,
-    COIN_KIND_VIACOIN,
-    COIN_KIND_VERTCOIN,
-    COIN_KIND_DIGIBYTE,
-    COIN_KIND_QTUM,
-    COIN_KIND_BITCOIN_PRIVATE,
-    COIN_KIND_XRHODIUM,
-    COIN_KIND_HORIZEN,
-    COIN_KIND_GAMECREDITS,
-    COIN_KIND_FIRO,
-    COIN_KIND_ZCLASSIC,
-    COIN_KIND_XSN,
-    COIN_KIND_NIX,
-    COIN_KIND_LBRY,
-    COIN_KIND_RESISTANCE,
-    COIN_KIND_RAVENCOIN,
-    COIN_KIND_HYDRA
+typedef enum btchip_coin_kind_e
+{
+    COIN_KIND_PLCULTIMA_TESTNET,
+    COIN_KIND_PLCULTIMA
 } btchip_coin_kind_t;
 
-typedef struct btchip_altcoin_config_s {
+typedef struct btchip_altcoin_config_s
+{
     // new app
     unsigned long bip32_pubkey_version;
-
-    // legacy
+    
     unsigned short bip44_coin_type;
-    unsigned short bip44_coin_type2;
     unsigned int p2pkh_version;
     unsigned int p2sh_version;
-    unsigned char family;
     //unsigned char* iconsuffix;// will use the icon provided on the stack (maybe)
-    char coinid[14]; // used coind id for message signature prefix
-    char name[16]; // for ux displays
+    char coinid[14];    // used coind id for message signature prefix
+    char name[16];      // for ux displays
     char name_short[6]; // for unit in ux displays
-    char native_segwit_prefix_val[5];
-    const char* native_segwit_prefix; // null if no segwit prefix
-    unsigned int forkid;
-    unsigned int zcash_consensus_branch_id;
     btchip_coin_kind_t kind;
     unsigned int flags;
 } btchip_altcoin_config_t;

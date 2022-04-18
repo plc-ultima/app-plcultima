@@ -7,7 +7,7 @@ from .slip21 import Slip21Node
 
 mnemo = Mnemonic("english")
 
-DEFAULT_SPECULOS_MNEMONIC = "glory promote mansion idle axis finger extra february uncover one trip resource lawn turtle enact monster seven myth punch hobby comfort wild raise skin"
+DEFAULT_SPECULOS_MNEMONIC = "tackle kit shed defense able original when van delay vanish odor hello fire vault jazz receive visit dream menu judge vacant cheap ten fringe"
 
 WALLET_POLICY_SLIP21_LABEL = b"LEDGER-Wallet policy"
 

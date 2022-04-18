@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   Ledger App - Bitcoin Wallet
+*   Ledger App - PLC Ultima Wallet
 *   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,19 +40,15 @@ void btchip_bagl_confirm_message_signature(void);
 void btchip_bagl_user_action_message_signing(unsigned char confirming);
 
 // Public key display
-uint8_t set_key_path_to_display(unsigned char* keyPath);
+uint8_t set_key_path_to_display(unsigned char *keyPath);
 void btchip_bagl_display_public_key(uint8_t is_derivation_path_unusual);
 void btchip_bagl_user_action_display(unsigned char confirming);
 
 void btchip_bagl_request_pubkey_approval(void);
-void btchip_bagl_request_change_path_approval(unsigned char* change_path);
-
-// UI to confirm processing of tx with segwit inputs
-void btchip_bagl_request_segwit_input_approval(void);
+void btchip_bagl_request_change_path_approval(unsigned char *change_path);
 
 // UI to confirm signing path
 void btchip_bagl_request_sign_path_approval(unsigned char *derivation_path);
 void btchip_bagl_user_action_signtx(unsigned char confirming, unsigned char direct);
-
 
 #endif /* _BTCHIP_BAGL_H_ */

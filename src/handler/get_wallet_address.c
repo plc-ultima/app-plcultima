@@ -186,7 +186,7 @@ void handler_get_wallet_address(dispatcher_context_t *dc) {
             return;
         }
 
-        uint32_t coin_types[2] = {G_coin_config->bip44_coin_type, G_coin_config->bip44_coin_type2};
+        uint32_t coin_types[1] = {G_coin_config->bip44_coin_type};
 
         uint32_t bip32_path[5];
         for (int i = 0; i < 3; i++) {
