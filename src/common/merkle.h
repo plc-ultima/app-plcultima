@@ -100,8 +100,6 @@ static inline int merkle_get_ith_direction(size_t size, size_t index, size_t i) 
         } else {
             size = mask;
         }
-
-        mask /= 2;
     }
 
     return -1;

@@ -254,8 +254,6 @@ void app_exit() {
  * Handle APDU command received and send back APDU response using handlers.
  */
 void coin_main(btchip_altcoin_config_t *coin_config) {
-    PRINT_STACK_POINTER();
-
     // assumptions on the length of data structures
 
     _Static_assert(sizeof(cx_sha256_t) <= 108, "cx_sha256_t too large");
@@ -268,10 +266,6 @@ void coin_main(btchip_altcoin_config_t *coin_config) {
     } else {
         G_coin_config = coin_config;
     }
-
-#if defined(HAVE_PRINT_STACK_POINTER) && defined(HAVE_BOLOS_APP_STACK_CANARY)
-    PRINTF("STACK CANARY ADDRESS: %08x\n", &app_stack_canary);
-#endif
 
 #ifdef HAVE_SEMIHOSTED_PRINTF
     PRINTF("APDU State size: %d\n", sizeof(command_state_t));

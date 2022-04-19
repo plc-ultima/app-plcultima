@@ -69,8 +69,6 @@ static int cmp_compressed_pubkeys(const void *a, const void *b) {
 static int __attribute__((noinline)) get_extended_pubkey(policy_parser_state_t *state,
                                                          int key_index,
                                                          serialized_extended_pubkey_t *out) {
-    PRINT_STACK_POINTER();
-
     policy_map_key_info_t key_info;
 
     {
@@ -112,8 +110,6 @@ static int __attribute__((noinline)) get_extended_pubkey(policy_parser_state_t *
 }
 
 static int get_derived_pubkey(policy_parser_state_t *state, int key_index, uint8_t out[static 33]) {
-    PRINT_STACK_POINTER();
-
     serialized_extended_pubkey_t ext_pubkey;
 
     int ret = get_extended_pubkey(state, key_index, &ext_pubkey);
@@ -293,8 +289,6 @@ static int process_sh_wsh_node(policy_parser_state_t *state) {
 }
 
 static int process_multi_sortedmulti_node(policy_parser_state_t *state) {
-    PRINT_STACK_POINTER();
-
     policy_parser_node_state_t *node = &state->nodes[state->node_stack_eos];
 
     if (node->step != 0) {

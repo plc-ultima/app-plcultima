@@ -40,7 +40,7 @@ void merkle_compute_element_hash(const uint8_t *in, size_t in_len, uint8_t out[s
 // void merkle_combine_hashes(const uint8_t left[static 32],
 //                            const uint8_t right[static 32],
 //                            uint8_t out[static 32]) {
-//     PRINT_STACK_POINTER();
+//
 
 //     cx_sha256_t hash;
 //     cx_sha256_init(&hash);
@@ -57,8 +57,6 @@ void merkle_compute_element_hash(const uint8_t *in, size_t in_len, uint8_t out[s
 void merkle_combine_hashes(const uint8_t left[static 32],
                            const uint8_t right[static 32],
                            uint8_t out[static 32]) {
-    PRINT_STACK_POINTER();
-
     cx_sha256_init_no_throw(&G_cx.sha256);
 
     uint8_t prefix = 0x01;

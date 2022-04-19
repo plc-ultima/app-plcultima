@@ -11,6 +11,8 @@ unit-tests/build/
 unit-tests/coverage/
 unit-tests/coverage.info
 
+scan-build
+
 tests/plcultima-bin
 tests/plcultima-testnet-bin
 

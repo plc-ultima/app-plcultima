@@ -148,7 +148,7 @@ void handler_get_extended_pubkey(dispatcher_context_t *dc) {
         return;
     }
 
-    uint32_t coin_types[1] = {G_coin_config->bip44_coin_type};
+    uint32_t coin_types[2] = {G_coin_config->bip44_coin_type, G_coin_config->bip44_coin_type};
     bool is_safe = is_path_safe_for_pubkey_export(bip32_path, bip32_path_len, coin_types, 2);
 
     if (!is_safe && !display) {

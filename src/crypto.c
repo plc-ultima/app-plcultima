@@ -124,8 +124,6 @@ int crypto_derive_private_key(cx_ecfp_private_key_t *private_key,
 int bip32_CKDpub(const serialized_extended_pubkey_t *parent,
                  uint32_t index,
                  serialized_extended_pubkey_t *child) {
-    PRINT_STACK_POINTER();
-
     if (index >= BIP32_FIRST_HARDENED_CHILD) {
         return -1;  // can only derive unhardened children
     }
@@ -192,8 +190,6 @@ int bip32_CKDpub(const serialized_extended_pubkey_t *parent,
 #ifndef _NR_cx_hash_ripemd160
 /** Missing in some SDKs, we implement it using the cxram section if needed. */
 static size_t cx_hash_ripemd160(const uint8_t *in, size_t in_len, uint8_t *out, size_t out_len) {
-    PRINT_STACK_POINTER();
-
     if (out_len < CX_RIPEMD160_SIZE) {
         return 0;
     }
@@ -210,8 +206,6 @@ void crypto_ripemd160(const uint8_t *in, uint16_t inlen, uint8_t out[static 20])
 }
 
 void crypto_hash160(const uint8_t *in, uint16_t inlen, uint8_t out[static 20]) {
-    PRINT_STACK_POINTER();
-
     uint8_t buffer[32];
     cx_hash_sha256(in, inlen, buffer, 32);
     crypto_ripemd160(buffer, 32, out);
@@ -219,20 +213,18 @@ void crypto_hash160(const uint8_t *in, uint16_t inlen, uint8_t out[static 20]) {
 
 int crypto_get_compressed_pubkey(const uint8_t uncompressed_key[static 65],
                                  uint8_t out[static 33]) {
-    PRINT_STACK_POINTER();
-
     if (uncompressed_key[0] != 0x04) {
         return -1;
     }
-    out[0] = (uncompressed_key[64] % 2 == 1) ? 0x03 : 0x02;
+
+    const uint8_t val = uncompressed_key[64];  // clang_sa_ignore [core.uninitialized.Assign]
+    out[0] = ((val % 2) == 1) ? 0x03 : 0x02;
     memmove(out + 1, uncompressed_key + 1, 32);  // copy x
     return 0;
 }
 
 int crypto_get_uncompressed_pubkey(const uint8_t compressed_key[static 33],
                                    uint8_t out[static 65]) {
-    PRINT_STACK_POINTER();
-
     uint8_t prefix = compressed_key[0];
     if (prefix != 0x02 && prefix != 0x03) {
         return -1;
