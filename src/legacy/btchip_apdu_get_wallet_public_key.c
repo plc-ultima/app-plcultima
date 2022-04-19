@@ -55,7 +55,7 @@ unsigned short btchip_apdu_get_wallet_public_key()
         ((N_btchip.bkp.config.options & BTCHIP_OPTION_UNCOMPRESSED_KEYS) != 0);
     uint32_t request_token;
     unsigned char chainCode[32];
-    uint8_t is_derivation_path_unusual;
+    uint8_t is_derivation_path_unusual = 0;
 
     bool display = (G_io_apdu_buffer[ISO_OFFSET_P1] == P1_DISPLAY);
     bool display_request_token = N_btchip.pubKeyRequestRestriction && (G_io_apdu_buffer[ISO_OFFSET_P1] == P1_REQUEST_TOKEN) && G_io_apdu_media == IO_APDU_MEDIA_U2F;

@@ -712,7 +712,7 @@ void get_address_from_output_script(unsigned char *script, int script_size,
 {
   if (btchip_output_script_is_op_return(script))
   {
-    strcpy(out, "OP_RETURN");
+    strlcpy(out, "OP_RETURN",out_size);
     return;
   }
   unsigned char versionSize = 3;
@@ -928,7 +928,7 @@ uint8_t set_key_path_to_display(unsigned char *keyPath)
 void btchip_bagl_display_public_key(uint8_t is_derivation_path_unusual)
 {
   // append a white space at the end of the address to avoid glitch on nano S
-  strcat((char *)G_io_apdu_buffer + 200, " ");
+  strlcat((char *)G_io_apdu_buffer + 200, " ", sizeof(G_io_apdu_buffer));
 
   ux_flow_init(0,
                is_derivation_path_unusual ? ux_display_public_with_warning_flow
