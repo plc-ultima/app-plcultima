@@ -31,8 +31,6 @@
 #include "boilerplate/constants.h"
 #include "boilerplate/dispatcher.h"
 
-#include "commands.h"
-
 // common declarations between legacy and new code; will refactor it out later
 #include "legacy/include/btchip_context.h"
 #include "legacy/include/swap_lib_calls.h"
@@ -67,7 +65,6 @@ bolos_ux_params_t G_ux_params;
 
 #ifdef TARGET_NANOS
 // on NanoS only, we optimize the usage of the globals with a custom linker script
-command_state_t __attribute__((section(".new_globals"))) G_command_state;
 dispatcher_context_t __attribute__((section(".new_globals"))) G_dispatcher_context;
 
 #ifndef DISABLE_LEGACY_SUPPORT
@@ -75,7 +72,6 @@ dispatcher_context_t __attribute__((section(".new_globals"))) G_dispatcher_conte
 btchip_context_t __attribute__((section(".legacy_globals"))) btchip_context_D;
 #endif  // DISABLE_LEGACY_SUPPORT
 #else   // #ifndef TARGET_NANOS
-command_state_t G_command_state;
 dispatcher_context_t G_dispatcher_context;
 
 // legacy variables
@@ -173,7 +169,6 @@ void app_main() {
             return;
         }
 
-#ifndef DISABLE_LEGACY_SUPPORT
         if (G_io_apdu_buffer[0] == CLA_APP_LEGACY) {
             if (G_app_mode != APP_MODE_LEGACY) {
                 explicit_bzero(&btchip_context_D, sizeof(btchip_context_D));
@@ -195,45 +190,8 @@ void app_main() {
             if (btchip_context_D.called_from_swap && vars.swap_data.should_exit) {
                 os_sched_exit(0);
             }
-        } else {
-#endif
-            if (G_app_mode != APP_MODE_NEW) {
-                explicit_bzero(&G_command_state, sizeof(G_command_state));
-
-                G_app_mode = APP_MODE_NEW;
-            }
-
-            // Reset structured APDU command
-            memset(&cmd, 0, sizeof(cmd));
-            // Parse APDU command from G_io_apdu_buffer
-            if (!apdu_parser(&cmd, G_io_apdu_buffer, input_len)) {
-                PRINTF("=> /!\\ BAD LENGTH: %.*H\n", input_len, G_io_apdu_buffer);
-                io_send_sw(SW_WRONG_DATA_LENGTH);
-                return;
-            }
-
-            PRINTF("=> CLA=%02X | INS=%02X | P1=%02X | P2=%02X | Lc=%02X | CData=",
-                   cmd.cla,
-                   cmd.ins,
-                   cmd.p1,
-                   cmd.p2,
-                   cmd.lc);
-            for (int i = 0; i < cmd.lc; i++) {
-                PRINTF("%02X", cmd.data[i]);
-            }
-            PRINTF("\n");
-
-            // Dispatch structured APDU command to handler
-            apdu_dispatcher(COMMAND_DESCRIPTORS,
-                            sizeof(COMMAND_DESCRIPTORS) / sizeof(COMMAND_DESCRIPTORS[0]),
-                            (machine_context_t *) &G_command_state,
-                            sizeof(G_command_state),
-                            ui_menu_main,
-                            &cmd);
         }
-#ifndef DISABLE_LEGACY_SUPPORT
     }
-#endif
 }
 
 /**
@@ -257,7 +215,6 @@ void coin_main(btchip_altcoin_config_t *coin_config) {
     // assumptions on the length of data structures
 
     _Static_assert(sizeof(cx_sha256_t) <= 108, "cx_sha256_t too large");
-    _Static_assert(sizeof(policy_map_key_info_t) <= 148, "policy_map_key_info_t too large");
 
     btchip_altcoin_config_t config;
     if (coin_config == NULL) {
